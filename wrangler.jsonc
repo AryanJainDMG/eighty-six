@@ -1,0 +1,10 @@
+{
+  // Cloudflare's Workers flow replaced the old Pages one for new projects.
+  // There is no Worker script here and no build step — this deploys the three
+  // static files in frontend/ and nothing else. The backend lives on Render.
+  "name": "eighty-six",
+  "compatibility_date": "2026-09-21",
+  "assets": {
+    "directory": "./frontend"
+  }
+}

@@ -11,3 +11,5 @@ node_modules/
 # the README can be checked without spending a quarter of an hour
 # reproducing them.
 backend/bench/results.jsonl
+.wrangler/
+node_modules/
