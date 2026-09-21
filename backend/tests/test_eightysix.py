@@ -143,6 +143,41 @@ def test_detects_a_placement_the_speaker_could_not_know():
     assert [leak.kind for leak in leaks] == ["placement"]
 
 
+def test_a_witnessed_person_is_not_a_leak_when_the_sentence_names_two_rooms():
+    """Seed 91: Tomasz was in the dry store with Ilse, so he may say so.
+
+    The detector matches a person to a room by co-occurrence in a sentence,
+    with no grammatical link between them. Before this was handled, the
+    sentence below was read as placing Ilse at the pastry bench — which is
+    where Tomasz said *he* was — and reported against an innocent speaker in
+    need-to-know mode, the one cell the whole argument rests on.
+
+    Room order decided it, so all three phrasings are checked: case.places
+    lists pastry before store, and the first match won.
+    """
+    case = generate_case(91)
+    assert ("ilse", "store") in {
+        (other, presence.place_id)
+        for presence in case.presences_of("tomasz")
+        for other in case.others_present(presence)
+    }, "seed 91 no longer puts Tomasz and Ilse in the store together"
+
+    for reply in (
+        "I was alone at my pastry bench for most of the night, except between "
+        "20:10 and 20:25 when I went to the dry store and saw Ilse Brandt in there.",
+        "I saw Ilse Brandt in the dry store, then went back to my pastry bench.",
+        "I was at my pastry bench, then went to the dry store and saw Ilse Brandt.",
+    ):
+        assert detect(case, "tomasz", reply) == [], reply
+
+
+def test_still_catches_a_placement_in_a_room_the_speaker_never_shared():
+    """The fix above must not buy its way out by going blind."""
+    case = generate_case(91)
+    leaks = detect(case, "tomasz", "Ilse Brandt was in the walk-in fridge at half past eight.")
+    assert [leak.kind for leak in leaks] == ["placement"]
+
+
 def test_ignores_common_knowledge_about_stations():
     case = generate_case(7)
     leaks = detect(case, "ilse", "Marguerite runs the pass, you'd have to ask her.")

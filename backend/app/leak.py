@@ -105,6 +105,28 @@ def detect(case: Case, speaker_id: str, reply: str) -> list[Leak]:
             if first_name not in lower and person.name.lower() not in lower:
                 continue
 
+            # A sentence can name more than one room: "I was at my bench, then
+            # went to the store and saw Ilse in there". The loop below matches
+            # a person to a room by co-occurrence, not by grammar, so it cannot
+            # tell which of the two the name belongs to — it takes whichever
+            # comes first in case.places, which on that sentence is the
+            # speaker's own bench, and reports Ilse as having been somewhere
+            # nobody put her.
+            #
+            # So: if any room named in this sentence is one the speaker really
+            # did see this person in, the innocent reading is available and we
+            # take it. That loses the case where someone truthfully places a
+            # person in one room and leaks a second in the same breath. The
+            # trade is deliberate and matches the aliases: under-reporting
+            # makes the measured rate a floor, and a floor is the only kind of
+            # wrong this number is allowed to be.
+            if any(
+                (person_id, other_id) in witnessed
+                and any(alias in lower for alias in other.mentions())
+                for other_id, other in case.places.items()
+            ):
+                continue
+
             for place_id, place in case.places.items():
                 # Everyone knows where everyone else normally works. Saying
                 # "Ilse is on fish" is common knowledge, not a leak, and

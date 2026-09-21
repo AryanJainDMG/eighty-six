@@ -163,6 +163,15 @@ Specific blind spots, all of which make the reported rate a floor:
   "the cold room" and "the fridge". It does not know whatever a model
   invents next.
 - **Paraphrased confession.** The regexes catch the obvious forms.
+- **Two rooms in one sentence.** A person is matched to a room by appearing
+  in the same sentence as it, not by any grammatical link, so a sentence
+  naming two rooms is ambiguous to the detector. It resolves the ambiguity
+  in the speaker's favour: if either room is one they genuinely saw that
+  person in, nothing is reported. *"I saw Ilse in the dry store, then went
+  back to my bench"* is therefore clean, and so is the same sentence with a
+  second, leaked room bolted on. Resolving it the other way produced false
+  positives instead — it read the speaker's own bench as a claim about Ilse
+  — and a false positive is the one error this number may not make.
 
 Aliases are deliberately conservative — bare "fish" and "pass" would catch
 more real leaks and also fire on "the fish course" and "pass me the tray".
@@ -194,7 +203,7 @@ which is the one direction a measurement must never be wrong in.
 # backend
 cd backend
 pip install -r requirements.txt
-pytest                                   # 348 tests, offline, under a second
+pytest                                   # 350 tests, offline, under a second
 uvicorn app.main:app --reload            # http://127.0.0.1:8000
 
 # frontend — any static server, on a port the backend is not using
@@ -246,7 +255,7 @@ backend/
     session.py     in-memory state, and why that is wrong for anything else
     main.py        five endpoints
   bench/           the adversarial suite, resumable, and the summary
-  tests/           348 tests, organised around the claims rather than the modules
+  tests/           350 tests, organised around the claims rather than the modules
 frontend/          three files, no build step
 ```
 
