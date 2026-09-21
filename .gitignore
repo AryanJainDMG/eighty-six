@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.DS_Store
+node_modules/
+
+# The raw benchmark run: regenerable with `python bench/run.py`, and large.
+# bench/results.json — the summary — IS committed, so the numbers quoted in
+# the README can be checked without spending a quarter of an hour
+# reproducing them.
+backend/bench/results.jsonl

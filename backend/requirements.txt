@@ -1,0 +1,9 @@
+fastapi==0.141.1
+uvicorn[standard]==0.41.0
+httpx==0.28.1
+pydantic==2.12.3
+
+# Setup here is "pip install -r requirements.txt" then "pytest", so the runner
+# belongs in the same file. Render installs it too — a few seconds of build
+# time for the ability to run the suite on the box when something looks wrong.
+pytest==7.4.3

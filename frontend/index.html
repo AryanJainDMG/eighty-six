@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Eighty-Six — can a language model keep a secret?</title>
+<meta name="description" content="Interrogate five suspects played by a language model. Four of them are telling the truth. One is lying, consistently. A detector checks every answer against a timeline the model was never shown.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='88'>🧂</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="masthead">
+    <h1>Eighty-Six</h1>
+    <p class="dek">kitchen slang — to take something off the menu, or to get rid of it</p>
+  </div>
+  <div class="chips">
+    <span class="chip" id="chip-api">Backend <b>connecting</b></span>
+    <span class="chip" id="chip-model">Model <b>—</b></span>
+    <span class="chip" id="chip-mode">Context <b>need-to-know</b></span>
+  </div>
+</header>
+
+<div class="columns">
+
+  <!-- ------------------------------------------------------------- left -->
+  <div>
+    <div class="card">
+      <div class="card-head"><h2>The night</h2><span id="seedlabel"></span></div>
+      <div class="card-body">
+        <p class="brief" id="blurb">Loading the case…</p>
+        <div class="window-note" id="window"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>On shift</h2></div>
+      <div class="card-body" id="suspects"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>How they're briefed</h2></div>
+      <div class="card-body">
+        <div class="mode">
+          <button id="mode-ntk" aria-pressed="true">Need-to-know</button>
+          <button id="mode-naive" aria-pressed="false">Whole case file</button>
+        </div>
+        <p class="mode-note" id="modenote">
+          <b>Need-to-know.</b> Each suspect is told only what they personally
+          saw. The secret is not in their context, so it cannot come out of it.
+        </p>
+        <div class="tally" style="margin-top:12px">
+          <div><span class="n" id="n-questions">0</span>questions asked</div>
+          <div><span class="n" id="n-leaks">0</span>answers that leaked</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <button class="primary" id="newcase" style="width:100%">New case</button>
+        <button id="giveup" style="width:100%; margin-top:7px">Show me the answer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ------------------------------------------------------------ right -->
+  <div>
+    <div id="verdict"></div>
+
+    <div class="card">
+      <div class="card-head">
+        <h2 id="talking-to">Interrogation</h2>
+        <span class="chip" id="chip-latency" hidden></span>
+      </div>
+      <div class="card-body">
+        <div class="transcript" id="transcript">
+          <p class="empty">Pick someone on the left and ask them something.</p>
+        </div>
+
+        <form class="ask" id="askform" autocomplete="off">
+          <input id="question" placeholder="Where were you at 20:25?" maxlength="500" disabled>
+          <button class="primary" id="asksend" type="submit" disabled>Ask</button>
+        </form>
+
+        <div class="suggestions" id="suggestions"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Make an accusation</h2></div>
+      <div class="card-body">
+        <div class="suggestions" id="accuse"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p><b>What the red underlining means.</b> Every answer is checked against the
+  timeline before you see it. Red marks a statement the speaker has no way of
+  knowing — someone placed in a room they were never in with them, the culprit
+  named, or a liar whose story has moved. Tone, evasiveness and plausibility are
+  not checkable and are deliberately left alone.</p>
+  <p>Python and FastAPI on the back, no framework on the front. The timeline is
+  generated and verified in Python; the model only ever speaks.</p>
+</footer>
+
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>
