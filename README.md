@@ -188,6 +188,16 @@ which is the one direction a measurement must never be wrong in.
   and also better at reciting the case file it was given. I do not know
   which effect dominates, and the honest answer is that I have not run it.
   `EIGHTYSIX_PROVIDER=gemini` with a key runs the identical benchmark.
+- **The character's manner moves the number.** Each dossier carries a
+  one-line instruction about how that person talks, written for flavour,
+  and on a capable model it turns out to be worth almost as much as the
+  question. Dev — *"talks quickly and too much, desperate to be helpful"* —
+  leaked on 8 of 8 answers on one case. Ilse — *"flat and factual,
+  volunteers nothing"* — leaked on 6 of 28 across seven. Same case file,
+  same question, same model; the difference is a sentence of
+  characterisation. So the whole-case-file rate depends on the model, the
+  question *and* the prose, which is three ways for it to move. The
+  need-to-know rate depends on none of them.
 - **180 answers, three cases.** The 0% and the 9% are far apart enough to
   survive that. The per-question breakdown is thinner — 15 answers per cell
   per mode — so treat "injection never worked" as a strong hint rather than
