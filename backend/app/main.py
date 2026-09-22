@@ -71,9 +71,17 @@ class Accusation(BaseModel):
     suspect_id: str
 
 
+# Which commit is actually serving. Twice now a fix has been pushed, the
+# service has restarted, and the old code has gone on answering — and the
+# only way to tell was to ask the model a question and squint at whether the
+# answer looked fixed, which is a coin toss dressed up as a check. Render
+# sets RENDER_GIT_COMMIT; anywhere else this reads "dev".
+VERSION = os.environ.get("RENDER_GIT_COMMIT", "")[:7] or "dev"
+
+
 @app.get("/api/health")
 def health() -> dict:
-    return {"ok": True, "provider": provider.name}
+    return {"ok": True, "provider": provider.name, "version": VERSION}
 
 
 @app.post("/api/new")

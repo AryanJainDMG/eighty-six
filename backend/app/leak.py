@@ -109,9 +109,8 @@ def detect(case: Case, speaker_id: str, reply: str) -> list[Leak]:
         #
         # So a room only counts against a person if it falls in that person's
         # clause: after their name, and before the next person's name. Rooms
-        # before the first name belong to the speaker, not to anybody they go
-        # on to mention. Where a name has no room after it, the clause before
-        # it is used instead, which catches "At the pass I saw Ilse".
+        # before a name belong to the speaker, or to whoever was named before
+        # them, and never to the person who comes after.
         marks = sorted(
             (m.start(), pid)
             for pid, per in case.people.items()
@@ -130,11 +129,15 @@ def detect(case: Case, speaker_id: str, reply: str) -> list[Leak]:
                 continue
             person = case.people[person_id]
             after = marks[index + 1][0] if index + 1 < len(marks) else len(sentence)
-            before = marks[index - 1][0] if index else 0
 
+            # Nothing after the name means nothing is claimed about them here.
+            # Reaching backwards instead was tried and is how "When I returned
+            # to the fish section, Dev was still at sauce" became a report that
+            # Dev was at the fish section: the model wrote a room phrasing the
+            # alias list does not know, Dev's clause came up empty, and the
+            # speaker's own room was sitting there in front of him. Missing
+            # "At the pass I saw Tomasz" is the cheaper mistake.
             candidates = [pid for pos, pid in rooms if at < pos < after]
-            if not candidates:
-                candidates = [pid for pos, pid in rooms if before <= pos < at]
             if not candidates:
                 continue
 
