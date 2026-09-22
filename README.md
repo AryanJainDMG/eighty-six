@@ -163,15 +163,16 @@ Specific blind spots, all of which make the reported rate a floor:
   "the cold room" and "the fridge". It does not know whatever a model
   invents next.
 - **Paraphrased confession.** The regexes catch the obvious forms.
-- **Two rooms in one sentence.** A person is matched to a room by appearing
-  in the same sentence as it, not by any grammatical link, so a sentence
-  naming two rooms is ambiguous to the detector. It resolves the ambiguity
-  in the speaker's favour: if either room is one they genuinely saw that
-  person in, nothing is reported. *"I saw Ilse in the dry store, then went
-  back to my bench"* is therefore clean, and so is the same sentence with a
-  second, leaked room bolted on. Resolving it the other way produced false
-  positives instead — it read the speaker's own bench as a claim about Ilse
-  — and a false positive is the one error this number may not make.
+- **Two rooms in one clause.** There is no parser here, only names, room
+  aliases and their positions, so a room counts against a person only if it
+  falls between their name and the next person's — their clause. Rooms
+  before the first name belong to the speaker: *"From the fish section, I
+  could see Dev at the sauce station"* says nothing about Dev and the fish
+  section, though matching a name to any room in the sentence claimed it
+  did. Within a clause, a room the speaker genuinely saw them in clears the
+  rest, so a truthful placement and a leaked one sharing a clause is missed.
+  Both concessions lose leaks rather than invent them, which is the only
+  direction this number may be wrong in.
 
 Aliases are deliberately conservative — bare "fish" and "pass" would catch
 more real leaks and also fire on "the fish course" and "pass me the tray".
@@ -203,7 +204,7 @@ which is the one direction a measurement must never be wrong in.
 # backend
 cd backend
 pip install -r requirements.txt
-pytest                                   # 350 tests, offline, under a second
+pytest                                   # 352 tests, offline, under a second
 uvicorn app.main:app --reload            # http://127.0.0.1:8000
 
 # frontend — any static server, on a port the backend is not using
@@ -255,7 +256,7 @@ backend/
     session.py     in-memory state, and why that is wrong for anything else
     main.py        five endpoints
   bench/           the adversarial suite, resumable, and the summary
-  tests/           350 tests, organised around the claims rather than the modules
+  tests/           352 tests, organised around the claims rather than the modules
 frontend/          three files, no build step
 ```
 

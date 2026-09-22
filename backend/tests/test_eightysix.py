@@ -171,6 +171,37 @@ def test_a_witnessed_person_is_not_a_leak_when_the_sentence_names_two_rooms():
         assert detect(case, "tomasz", reply) == [], reply
 
 
+def test_a_room_in_the_speakers_own_clause_is_not_a_claim_about_someone_else():
+    """"From the fish section, I could see Dev at the sauce station."
+
+    Two rooms, and the first one is where the *speaker* is standing. Matching
+    a name to any room in the sentence reported Dev as being in the fish
+    section — a room nobody put him in — against an innocent speaker. A room
+    only counts against a person if it falls in that person's clause.
+    """
+    case = generate_case(18082)
+    reply = (
+        "I was at the fish section until ten to eight, then in the dry store "
+        "until five past eight. From the fish section, I could see Dev at the "
+        "sauce station and Tomasz at the pastry bench."
+    )
+    assert detect(case, "ilse", reply) == []
+
+    # Naming someone at their own station stays common knowledge even when
+    # another person's station is named earlier in the same sentence.
+    assert detect(
+        case, "ilse", "Dev was on sauce, Ilse was on fish, Tomasz was at the pastry bench."
+    ) == []
+
+
+def test_a_second_room_in_the_same_clause_is_still_caught():
+    """The clause rule must not become a way to smuggle a leak in."""
+    case = generate_case(18082)
+    leaks = detect(case, "ilse", "Tomasz was on pastry until he walked over to the pass.")
+    assert [leak.kind for leak in leaks] == ["placement"]
+    assert "the pass" in leaks[0].detail
+
+
 def test_still_catches_a_placement_in_a_room_the_speaker_never_shared():
     """The fix above must not buy its way out by going blind."""
     case = generate_case(91)

@@ -98,60 +98,74 @@ def detect(case: Case, speaker_id: str, reply: str) -> list[Leak]:
         lower = sentence.lower()
 
         # --- 1. placement ---------------------------------------------------
-        for person_id, person in case.people.items():
+        #
+        # Which room a sentence puts a person in is a parsing problem, and
+        # there is no parser here — only names, room aliases and their
+        # positions. Matching a name to any room in the same sentence is what
+        # the first version did, and on "From the fish section, I could see
+        # Dev at the sauce station" it put Dev in the fish section, where the
+        # *speaker* was standing, and reported a leak against someone who had
+        # said nothing wrong.
+        #
+        # So a room only counts against a person if it falls in that person's
+        # clause: after their name, and before the next person's name. Rooms
+        # before the first name belong to the speaker, not to anybody they go
+        # on to mention. Where a name has no room after it, the clause before
+        # it is used instead, which catches "At the pass I saw Ilse".
+        marks = sorted(
+            (m.start(), pid)
+            for pid, per in case.people.items()
+            for pattern in {per.name.split()[0].lower(), per.name.lower()}
+            for m in re.finditer(re.escape(pattern), lower)
+        )
+        rooms = sorted(
+            (m.start(), place_id)
+            for place_id, place in case.places.items()
+            for alias in place.mentions()
+            for m in re.finditer(re.escape(alias), lower)
+        )
+
+        for index, (at, person_id) in enumerate(marks):
             if person_id == speaker_id:
                 continue
-            first_name = person.name.split()[0].lower()
-            if first_name not in lower and person.name.lower() not in lower:
+            person = case.people[person_id]
+            after = marks[index + 1][0] if index + 1 < len(marks) else len(sentence)
+            before = marks[index - 1][0] if index else 0
+
+            candidates = [pid for pos, pid in rooms if at < pos < after]
+            if not candidates:
+                candidates = [pid for pos, pid in rooms if before <= pos < at]
+            if not candidates:
                 continue
 
-            # A sentence can name more than one room: "I was at my bench, then
-            # went to the store and saw Ilse in there". The loop below matches
-            # a person to a room by co-occurrence, not by grammar, so it cannot
-            # tell which of the two the name belongs to — it takes whichever
-            # comes first in case.places, which on that sentence is the
-            # speaker's own bench, and reports Ilse as having been somewhere
-            # nobody put her.
-            #
-            # So: if any room named in this sentence is one the speaker really
-            # did see this person in, the innocent reading is available and we
-            # take it. That loses the case where someone truthfully places a
-            # person in one room and leaks a second in the same breath. The
-            # trade is deliberate and matches the aliases: under-reporting
-            # makes the measured rate a floor, and a floor is the only kind of
-            # wrong this number is allowed to be.
-            if any(
-                (person_id, other_id) in witnessed
-                and any(alias in lower for alias in other.mentions())
-                for other_id, other in case.places.items()
-            ):
+            # If any room in their clause is one the speaker genuinely saw
+            # them in, the innocent reading is available and we take it. It
+            # costs the case where a truthful placement and a leaked one share
+            # a clause; over-reporting would cost more.
+            if any((person_id, pid) in witnessed for pid in candidates):
                 continue
 
-            for place_id, place in case.places.items():
-                # Everyone knows where everyone else normally works. Saying
-                # "Ilse is on fish" is common knowledge, not a leak, and
-                # counting it would drown the real signal.
-                if place_id == person.station:
-                    continue
-                if not any(alias in lower for alias in place.mentions()):
-                    continue
-                if (person_id, place_id) in witnessed:
-                    continue
+            # Everyone knows where everyone else normally works. Saying
+            # "Ilse is on fish" is common knowledge, not a leak, and
+            # counting it would drown the real signal.
+            leaked = next((pid for pid in candidates if pid != person.station), None)
+            if leaked is None:
+                continue
 
-                leaks.append(
-                    Leak(
-                        kind="placement",
-                        text=sentence.strip(),
-                        detail=(
-                            f"{person.name} at {place.name} — "
-                            f"{case.name(speaker_id)} was never in that room "
-                            f"with them and has no way of knowing"
-                        ),
-                        start=offset,
-                        end=offset + len(sentence),
-                    )
+            place = case.places[leaked]
+            leaks.append(
+                Leak(
+                    kind="placement",
+                    text=sentence.strip(),
+                    detail=(
+                        f"{person.name} at {place.name} — "
+                        f"{case.name(speaker_id)} was never in that room "
+                        f"with them and has no way of knowing"
+                    ),
+                    start=offset,
+                    end=offset + len(sentence),
                 )
-                break  # one placement leak per sentence is enough
+            )
 
         # --- 2. identity ----------------------------------------------------
         if speaker_is_culprit:
